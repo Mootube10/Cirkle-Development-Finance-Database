@@ -1,0 +1,30 @@
+// Cirkle Development Financial Database (Google Sheets Integration)
+
+const API_KEY = 'AIzaSyDhy-HOI3i7nnl4XAI7RChIfCHlU90SG2M';
+const SPREADSHEET_ID = '1AVPNiZ6gIVfzsA9Xjj8-zD0P6GQDaE5QIhASFomP8YI';
+
+function fetchTransactions() {
+    fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Transactions!A:E?key=${API_KEY}`)
+        .then(response => response.json())
+        .then(data => {
+            const values = data.values;
+            let table = '<table><tr><th>Date</th><th>Type</th><th>Amount</th><th>Description</th></tr>';
+            values.forEach(row => {
+                table += `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td></tr>`;
+            });
+            table += '</table>';
+            document.getElementById('transactions').innerHTML = table;
+        })
+        .catch(error => console.error('Error fetching transactions:', error));
+}
+
+function addTransaction(data) {
+    fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Transactions!A:E:append?valueInputOption=RAW&key=${API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: [data] })
+    })
+    .then(response => response.json())
+    .then(() => alert('Transaction added successfully!'))
+    .catch(error => console.error('Error adding transaction:', error));
+}
