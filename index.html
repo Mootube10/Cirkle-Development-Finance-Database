@@ -52,10 +52,14 @@
             <input type="number" id="earned" placeholder="Robux Earned">
             <button onclick="addMonthlyRecord()">Add Record</button>
         </div>
-        
+
         <div class="section">
             <h3>Expenditure Summary</h3>
             <canvas id="spendingChart"></canvas>
+        </div>
+
+        <div class="section">
+            <button onclick="clearData()">Clear Data</button>
         </div>
     </div>
 
@@ -109,6 +113,17 @@
             } else {
                 alert("Please enter valid data for all fields.");
             }
+        }
+
+        function clearData() {
+            // Clear all relevant localStorage data
+            localStorage.removeItem("groupFunds");
+            localStorage.removeItem("expenditures");
+            localStorage.removeItem("monthlyRecords");
+
+            // Reset the page content
+            document.getElementById("totalGroupFunds").textContent = "0";
+            updateChart(); // Update the chart to reflect empty data
         }
 
         function updateChart() {
