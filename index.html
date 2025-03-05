@@ -61,16 +61,22 @@
 
     <script>
         function calculateTax() {
-            let amount = document.getElementById("robuxAmount").value;
-            let afterTax = amount * 0.7;
-            document.getElementById("afterTax").textContent = afterTax.toFixed(2);
+            let amount = parseFloat(document.getElementById("robuxAmount").value);
+            if (!isNaN(amount)) {
+                let afterTax = amount * 0.7;
+                document.getElementById("afterTax").textContent = afterTax.toFixed(2);
+            } else {
+                document.getElementById("afterTax").textContent = "Invalid Input";
+            }
         }
 
         function saveGroupFunds() {
             let funds = document.getElementById("groupFunds").value;
-            if (funds) {
+            if (funds && !isNaN(funds)) {
                 localStorage.setItem("groupFunds", funds);
                 document.getElementById("totalGroupFunds").textContent = funds;
+            } else {
+                alert("Please enter a valid amount for group funds.");
             }
         }
 
@@ -78,24 +84,30 @@
             let week = document.getElementById("week").value;
             let category = document.getElementById("category").value;
             let description = document.getElementById("description").value;
-            let amount = document.getElementById("amount").value;
-            if (week && category && description && amount) {
+            let amount = parseFloat(document.getElementById("amount").value);
+
+            if (week && category && description && !isNaN(amount)) {
                 let expenditures = JSON.parse(localStorage.getItem("expenditures")) || [];
                 expenditures.push({ week, category, description, amount });
                 localStorage.setItem("expenditures", JSON.stringify(expenditures));
                 updateChart();
+            } else {
+                alert("Please fill in all fields with valid values.");
             }
         }
 
         function addMonthlyRecord() {
             let month = document.getElementById("month").value;
-            let spent = document.getElementById("spent").value;
-            let earned = document.getElementById("earned").value;
-            if (month && spent && earned) {
+            let spent = parseFloat(document.getElementById("spent").value);
+            let earned = parseFloat(document.getElementById("earned").value);
+
+            if (month && !isNaN(spent) && !isNaN(earned)) {
                 let records = JSON.parse(localStorage.getItem("monthlyRecords")) || [];
                 records.push({ month, spent, earned });
                 localStorage.setItem("monthlyRecords", JSON.stringify(records));
                 updateChart();
+            } else {
+                alert("Please enter valid data for all fields.");
             }
         }
 
