@@ -112,11 +112,24 @@
         }
 
         function updateChart() {
+            // Fetching the monthly records and planned expenditures from localStorage
             let records = JSON.parse(localStorage.getItem("monthlyRecords")) || [];
+            let expenditures = JSON.parse(localStorage.getItem("expenditures")) || [];
+
+            // Extracting labels and data for the chart
             let labels = records.map(record => record.month);
             let spentData = records.map(record => parseFloat(record.spent));
             let earnedData = records.map(record => parseFloat(record.earned));
-            
+
+            // Adding expenditures to the chart data (week-wise, assuming weekly breakdowns)
+            let expenditureLabels = expenditures.map(ex => ex.week);
+            let expenditureAmounts = expenditures.map(ex => parseFloat(ex.amount));
+
+            // Merging both records and expenditures (optional)
+            labels = [...labels, ...expenditureLabels];
+            spentData = [...spentData, ...expenditureAmounts]; // Adding expenditure amount to the spent data
+            earnedData = [...earnedData, ...Array(expenditureLabels.length).fill(0)]; // No earned data for expenditures
+
             let ctx = document.getElementById("spendingChart").getContext("2d");
             new Chart(ctx, {
                 type: "bar",
