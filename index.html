@@ -52,122 +52,104 @@
             <input type="number" id="earned" placeholder="Robux Earned">
             <button onclick="addMonthlyRecord()">Add Record</button>
         </div>
-
+        
         <div class="section">
             <h3>Expenditure Summary</h3>
             <canvas id="spendingChart"></canvas>
         </div>
 
         <div class="section">
-            <button onclick="clearData()">Clear Data</button>
+            <h3>Team Data</h3>
+            <p><strong>Expenditures:</strong></p>
+            <ul id="expendituresList"></ul>
+            <p><strong>Monthly Records:</strong></p>
+            <ul id="monthlyRecordsList"></ul>
         </div>
     </div>
 
     <script>
-        function calculateTax() {
-            let amount = parseFloat(document.getElementById("robuxAmount").value);
-            if (!isNaN(amount)) {
-                let afterTax = amount * 0.7;
-                document.getElementById("afterTax").textContent = afterTax.toFixed(2);
-            } else {
-                document.getElementById("afterTax").textContent = "Invalid Input";
-            }
-        }
-
+        // Store group funds to localStorage
         function saveGroupFunds() {
-            let funds = parseFloat(document.getElementById("groupFunds").value);
-            let currentFunds = parseFloat(localStorage.getItem("groupFunds")) || 0;
-
-            if (!isNaN(funds)) {
-                // If positive, add to current funds; if negative, subtract
-                currentFunds += funds;
-
-                // Store the updated value back to localStorage
-                localStorage.setItem("groupFunds", currentFunds);
-                document.getElementById("totalGroupFunds").textContent = currentFunds.toFixed(2);
-            } else {
-                alert("Please enter a valid amount for group funds.");
+            let funds = document.getElementById("groupFunds").value;
+            if (funds) {
+                localStorage.setItem("groupFunds", funds);
+                document.getElementById("totalGroupFunds").textContent = funds;
             }
         }
 
+        // Display total group funds from localStorage
+        function loadGroupFunds() {
+            let funds = localStorage.getItem("groupFunds");
+            if (funds) {
+                document.getElementById("totalGroupFunds").textContent = funds;
+            }
+        }
+
+        // Roblox tax calculator
+        function calculateTax() {
+            let amount = document.getElementById("robuxAmount").value;
+            let afterTax = amount * 0.7;
+            document.getElementById("afterTax").textContent = afterTax.toFixed(2);
+        }
+
+        // Add planned expenditure and update list
         function addPlannedExpenditure() {
             let week = document.getElementById("week").value;
             let category = document.getElementById("category").value;
             let description = document.getElementById("description").value;
-            let amount = parseFloat(document.getElementById("amount").value);
+            let amount = document.getElementById("amount").value;
 
-            if (week && category && description && !isNaN(amount)) {
+            if (week && category && description && amount) {
                 let expenditures = JSON.parse(localStorage.getItem("expenditures")) || [];
                 expenditures.push({ week, category, description, amount });
                 localStorage.setItem("expenditures", JSON.stringify(expenditures));
-                updateChart();
-            } else {
-                alert("Please fill in all fields with valid values.");
+                updateExpendituresList();
             }
         }
 
+        // Add monthly record and update list
         function addMonthlyRecord() {
             let month = document.getElementById("month").value;
-            let spent = parseFloat(document.getElementById("spent").value);
-            let earned = parseFloat(document.getElementById("earned").value);
+            let spent = document.getElementById("spent").value;
+            let earned = document.getElementById("earned").value;
 
-            if (month && !isNaN(spent) && !isNaN(earned)) {
+            if (month && spent && earned) {
                 let records = JSON.parse(localStorage.getItem("monthlyRecords")) || [];
                 records.push({ month, spent, earned });
                 localStorage.setItem("monthlyRecords", JSON.stringify(records));
-                updateChart();
-            } else {
-                alert("Please enter valid data for all fields.");
+                updateMonthlyRecordsList();
             }
         }
 
-        function clearData() {
-            // Clear all relevant localStorage data
-            localStorage.removeItem("groupFunds");
-            localStorage.removeItem("expenditures");
-            localStorage.removeItem("monthlyRecords");
-
-            // Reset the page content
-            document.getElementById("totalGroupFunds").textContent = "0";
-            updateChart(); // Update the chart to reflect empty data
-        }
-
-        function updateChart() {
-            // Fetching the monthly records and planned expenditures from localStorage
-            let records = JSON.parse(localStorage.getItem("monthlyRecords")) || [];
+        // Update expenditure list display
+        function updateExpendituresList() {
             let expenditures = JSON.parse(localStorage.getItem("expenditures")) || [];
-
-            // Extracting labels and data for the chart
-            let labels = records.map(record => record.month);
-            let spentData = records.map(record => parseFloat(record.spent));
-            let earnedData = records.map(record => parseFloat(record.earned));
-
-            // Adding expenditures to the chart data (week-wise, assuming weekly breakdowns)
-            let expenditureLabels = expenditures.map(ex => ex.week);
-            let expenditureAmounts = expenditures.map(ex => parseFloat(ex.amount));
-
-            // Merging both records and expenditures (optional)
-            labels = [...labels, ...expenditureLabels];
-            spentData = [...spentData, ...expenditureAmounts]; // Adding expenditure amount to the spent data
-            earnedData = [...earnedData, ...Array(expenditureLabels.length).fill(0)]; // No earned data for expenditures
-
-            let ctx = document.getElementById("spendingChart").getContext("2d");
-            new Chart(ctx, {
-                type: "bar",
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: "Robux Spent", data: spentData, backgroundColor: "red" },
-                        { label: "Robux Earned", data: earnedData, backgroundColor: "green" }
-                    ]
-                },
-                options: { responsive: true }
+            let list = document.getElementById("expendituresList");
+            list.innerHTML = "";
+            expenditures.forEach(exp => {
+                let item = document.createElement("li");
+                item.textContent = `${exp.week}: ${exp.category} - ${exp.description} ($${exp.amount})`;
+                list.appendChild(item);
             });
         }
 
+        // Update monthly record list display
+        function updateMonthlyRecordsList() {
+            let records = JSON.parse(localStorage.getItem("monthlyRecords")) || [];
+            let list = document.getElementById("monthlyRecordsList");
+            list.innerHTML = "";
+            records.forEach(record => {
+                let item = document.createElement("li");
+                item.textContent = `${record.month}: Spent ${record.spent} Robux, Earned ${record.earned} Robux`;
+                list.appendChild(item);
+            });
+        }
+
+        // Load data from localStorage when page loads
         window.onload = function() {
-            document.getElementById("totalGroupFunds").textContent = localStorage.getItem("groupFunds") || 0;
-            updateChart();
+            loadGroupFunds();
+            updateExpendituresList();
+            updateMonthlyRecordsList();
         };
     </script>
 </body>
