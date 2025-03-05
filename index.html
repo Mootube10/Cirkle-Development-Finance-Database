@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Financial Database - Cirkle Development</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; position: relative; }
         .container { max-width: 800px; margin: auto; }
@@ -29,99 +30,98 @@
         </div>
 
         <div class="section">
-            <h3>Add Transaction</h3>
-            <input type="text" id="category" placeholder="Category (Sales, Payment, Budget, Revenue)">
+            <h3>Roblox Tax Calculator</h3>
+            <input type="number" id="robuxAmount" placeholder="Enter Robux">
+            <button onclick="calculateTax()">Calculate</button>
+            <p>After Tax: <span id="afterTax">0</span> Robux</p>
+        </div>
+
+        <div class="section">
+            <h3>Planned Expenditures (Weekly Breakdown)</h3>
+            <input type="text" id="week" placeholder="Week (Week 1, Week 2, etc.)">
+            <input type="text" id="category" placeholder="Category (Fixed, Pay Slips, Discretionary)">
             <input type="text" id="description" placeholder="Description">
             <input type="number" id="amount" placeholder="Amount">
-            <button onclick="addTransaction()">Add Transaction</button>
+            <button onclick="addPlannedExpenditure()">Add Expenditure</button>
         </div>
         
         <div class="section">
-            <h3>Transaction History</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Category</th>
-                        <th>Description</th>
-                        <th>Amount</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="transactionList"></tbody>
-            </table>
-            <p class="total">Total Transactions: $<span id="totalTransactions">0</span></p>
+            <h3>Monthly Robux Tracking</h3>
+            <input type="text" id="month" placeholder="Month (January, February, etc.)">
+            <input type="number" id="spent" placeholder="Robux Spent">
+            <input type="number" id="earned" placeholder="Robux Earned">
+            <button onclick="addMonthlyRecord()">Add Record</button>
+        </div>
+        
+        <div class="section">
+            <h3>Expenditure Summary</h3>
+            <canvas id="spendingChart"></canvas>
         </div>
     </div>
 
     <script>
-        const scriptURL = "https://script.google.com/macros/s/AKfycbwygg8vqAtGx4ApYalLeVkJzDPLSmSZyKsZrzZjRsAHtzb7MP-VvcF8D1RUry6T77kH/exec";
-
-        function loadGroupFunds() {
-            let groupFunds = localStorage.getItem("groupFunds") || 0;
-            document.getElementById("totalGroupFunds").textContent = groupFunds;
+        function calculateTax() {
+            let amount = document.getElementById("robuxAmount").value;
+            let afterTax = amount * 0.7;
+            document.getElementById("afterTax").textContent = afterTax.toFixed(2);
         }
 
         function saveGroupFunds() {
             let funds = document.getElementById("groupFunds").value;
             if (funds) {
                 localStorage.setItem("groupFunds", funds);
-                loadGroupFunds();
+                document.getElementById("totalGroupFunds").textContent = funds;
             }
         }
 
-        function loadTransactions() {
-            let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
-            let transactionList = document.getElementById("transactionList");
-            let total = 0;
-            transactionList.innerHTML = "";
-            transactions.forEach((transaction, index) => {
-                total += parseFloat(transaction.amount);
-                let row = `<tr>
-                    <td>${transaction.category}</td>
-                    <td>${transaction.description}</td>
-                    <td>$${transaction.amount}</td>
-                    <td><button onclick="deleteTransaction(${index})">Delete</button></td>
-                </tr>`;
-                transactionList.innerHTML += row;
-            });
-            document.getElementById("totalTransactions").textContent = total.toFixed(2);
-        }
-
-        function addTransaction() {
+        function addPlannedExpenditure() {
+            let week = document.getElementById("week").value;
             let category = document.getElementById("category").value;
             let description = document.getElementById("description").value;
             let amount = document.getElementById("amount").value;
-            if (category && description && amount) {
-                let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
-                let transaction = { category, description, amount };
-                transactions.push(transaction);
-                localStorage.setItem("transactions", JSON.stringify(transactions));
-                loadTransactions();
-                sendToGoogleSheets(transaction);
+            if (week && category && description && amount) {
+                let expenditures = JSON.parse(localStorage.getItem("expenditures")) || [];
+                expenditures.push({ week, category, description, amount });
+                localStorage.setItem("expenditures", JSON.stringify(expenditures));
+                updateChart();
             }
         }
 
-        function deleteTransaction(index) {
-            let transactions = JSON.parse(localStorage.getItem("transactions"));
-            transactions.splice(index, 1);
-            localStorage.setItem("transactions", JSON.stringify(transactions));
-            loadTransactions();
+        function addMonthlyRecord() {
+            let month = document.getElementById("month").value;
+            let spent = document.getElementById("spent").value;
+            let earned = document.getElementById("earned").value;
+            if (month && spent && earned) {
+                let records = JSON.parse(localStorage.getItem("monthlyRecords")) || [];
+                records.push({ month, spent, earned });
+                localStorage.setItem("monthlyRecords", JSON.stringify(records));
+                updateChart();
+            }
         }
 
-        function sendToGoogleSheets(transaction) {
-            fetch(scriptURL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(transaction)
-            })
-            .then(response => response.json())
-            .then(data => console.log("Success:", data))
-            .catch(error => console.error("Error:", error));
+        function updateChart() {
+            let records = JSON.parse(localStorage.getItem("monthlyRecords")) || [];
+            let labels = records.map(record => record.month);
+            let spentData = records.map(record => parseFloat(record.spent));
+            let earnedData = records.map(record => parseFloat(record.earned));
+            
+            let ctx = document.getElementById("spendingChart").getContext("2d");
+            new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: "Robux Spent", data: spentData, backgroundColor: "red" },
+                        { label: "Robux Earned", data: earnedData, backgroundColor: "green" }
+                    ]
+                },
+                options: { responsive: true }
+            });
         }
 
         window.onload = function() {
-            loadGroupFunds();
-            loadTransactions();
+            document.getElementById("totalGroupFunds").textContent = localStorage.getItem("groupFunds") || 0;
+            updateChart();
         };
     </script>
 </body>
