@@ -5,44 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Financial Database - Cirkle Development</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        .container { max-width: 600px; margin: auto; }
+        body { font-family: Arial, sans-serif; padding: 20px; position: relative; }
+        .container { max-width: 800px; margin: auto; }
         input, button { display: block; margin: 10px 0; width: 100%; padding: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+        .logo { position: absolute; top: 10px; right: 10px; width: 100px; }
+        .section { margin-top: 30px; padding: 10px; border: 1px solid #000; }
+        .total { font-weight: bold; }
     </style>
 </head>
 <body>
+    <img src="YOUR_LOGO_URL" alt="Cirkle Development Logo" class="logo">
+    
     <div class="container">
         <h2>Financial Database</h2>
-        <h3>Add Transaction</h3>
-        <input type="text" id="category" placeholder="Category (Sales, Payment, Budget, Revenue)">
-        <input type="text" id="description" placeholder="Description">
-        <input type="number" id="amount" placeholder="Amount">
-        <button onclick="addTransaction()">Add Transaction</button>
         
-        <h3>Transaction History</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Category</th>
-                    <th>Description</th>
-                    <th>Amount</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="transactionList"></tbody>
-        </table>
+        <div class="section">
+            <h3>Group Funds Calculation</h3>
+            <input type="number" id="groupFunds" placeholder="Enter Group Funds">
+            <button onclick="saveGroupFunds()">Save Group Funds</button>
+            <p><strong>Total Group Funds:</strong> $<span id="totalGroupFunds">0</span></p>
+        </div>
+
+        <div class="section">
+            <h3>Add Transaction</h3>
+            <input type="text" id="category" placeholder="Category (Sales, Payment, Budget, Revenue)">
+            <input type="text" id="description" placeholder="Description">
+            <input type="number" id="amount" placeholder="Amount">
+            <button onclick="addTransaction()">Add Transaction</button>
+        </div>
+        
+        <div class="section">
+            <h3>Transaction History</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionList"></tbody>
+            </table>
+            <p class="total">Total Transactions: $<span id="totalTransactions">0</span></p>
+        </div>
     </div>
 
     <script>
         const scriptURL = "https://script.google.com/macros/s/AKfycbwygg8vqAtGx4ApYalLeVkJzDPLSmSZyKsZrzZjRsAHtzb7MP-VvcF8D1RUry6T77kH/exec";
 
+        function loadGroupFunds() {
+            let groupFunds = localStorage.getItem("groupFunds") || 0;
+            document.getElementById("totalGroupFunds").textContent = groupFunds;
+        }
+
+        function saveGroupFunds() {
+            let funds = document.getElementById("groupFunds").value;
+            if (funds) {
+                localStorage.setItem("groupFunds", funds);
+                loadGroupFunds();
+            }
+        }
+
         function loadTransactions() {
             let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
             let transactionList = document.getElementById("transactionList");
+            let total = 0;
             transactionList.innerHTML = "";
             transactions.forEach((transaction, index) => {
+                total += parseFloat(transaction.amount);
                 let row = `<tr>
                     <td>${transaction.category}</td>
                     <td>${transaction.description}</td>
@@ -51,6 +84,7 @@
                 </tr>`;
                 transactionList.innerHTML += row;
             });
+            document.getElementById("totalTransactions").textContent = total.toFixed(2);
         }
 
         function addTransaction() {
@@ -85,7 +119,10 @@
             .catch(error => console.error("Error:", error));
         }
 
-        window.onload = loadTransactions;
+        window.onload = function() {
+            loadGroupFunds();
+            loadTransactions();
+        };
     </script>
 </body>
 </html>
