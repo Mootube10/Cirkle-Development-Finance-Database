@@ -75,10 +75,16 @@
         }
 
         function saveGroupFunds() {
-            let funds = document.getElementById("groupFunds").value;
-            if (funds && !isNaN(funds)) {
-                localStorage.setItem("groupFunds", funds);
-                document.getElementById("totalGroupFunds").textContent = funds;
+            let funds = parseFloat(document.getElementById("groupFunds").value);
+            let currentFunds = parseFloat(localStorage.getItem("groupFunds")) || 0;
+
+            if (!isNaN(funds)) {
+                // If positive, add to current funds; if negative, subtract
+                currentFunds += funds;
+
+                // Store the updated value back to localStorage
+                localStorage.setItem("groupFunds", currentFunds);
+                document.getElementById("totalGroupFunds").textContent = currentFunds.toFixed(2);
             } else {
                 alert("Please enter a valid amount for group funds.");
             }
